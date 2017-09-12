@@ -1,0 +1,32 @@
+version: '2'
+services:
+
+  logstash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      logstash --debug -e '
+        input {
+          cloudhub {
+            username => "${CLOUDHUB_USERNAME}"
+            password => "${CLOUDHUB_PASSWORD}"
+            organization_id => ${CLOUDHUB_ORGANIZATION_ID}
+            environment_name => "${CLOUDHUB_ENV_NAME}"
+            environment_id => "${CLOUDHUB_ENV_ID}"
+            interval => 10 # optional, default 300
+            proxy_host => "squid" # optional
+            proxy_port => 3128 # optional
+            proxy_username => "user" # optional
+            proxy_password => "secret" # optional
+
+            add_field => { "name" => "value" } # test usage of decorate()
+          }
+        }
+        output {
+          elasticsearch {
+            hosts => ["10.91.226.174:9200"]
+            user => elastic
+            password => changeme
+          }
+        }'
