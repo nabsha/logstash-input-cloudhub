@@ -13,7 +13,7 @@ services:
             username => "${CLOUDHUB_USERNAME}"
             password => "${CLOUDHUB_PASSWORD}"
             organization_id => "${CLOUDHUB_ORGANIZATION_ID}"
-            environment_name => "${CLOUDHUB_ENV_NAME}"
+            environment_name => "${ENV_NAME}"
             environment_id => "${CLOUDHUB_ENV_ID}"
           }
         } output { stdout {} }'

@@ -5,7 +5,7 @@
 export CLOUDHUB_USERNAME=YOUR_USERNAME
 export CLOUDHUB_PASSWORD=YOUR_PASSWORD
 export CLOUDHUB_ORGANIZATION_ID=CLOUDHUB_ORGANIZATION_ID
-export CLOUDHUB_ENV_NAME=ENVIROMENT_NAME
+export ENV_NAME=ENVIROMENT_NAME
 export CLOUDHUB_ENV_ID=ENVIRONMENT_ID
 docker-compose build
 ```
@@ -26,8 +26,8 @@ Your cloudhub management password
 ###CLOUDHUB_ORGANIZATION_ID
 The anypoint platform id for your organization (ITLabs, Commercial etc. Check confluence for more details under Anypoint Organizations article)
 
-###CLOUDHUB_ENV_NAME
-Only one of the three following values are valid: Development|Quality|Production
+###ENV_NAME
+The environment name to be set on logstash events. This has no relationship with CloudHub and accepts any value.
 
 ###CLOUDHUB_ENV_ID
 The anypoint platform id for the desired environment (Check confluence for more details under Anypoint Organizations article. Each environment has a different id per organization)
