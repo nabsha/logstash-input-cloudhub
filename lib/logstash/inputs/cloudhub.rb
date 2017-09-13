@@ -21,8 +21,8 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
   config :password, :validate => :string
   # Anypoint organization id
   config :organization_id, :validate => :string
-  # Environment name for the logstash events
-  config :environment_name, :validate => :string
+  # Environment name for the logstash events, default is 'Development'
+  config :environment_name, :validate => :string, default => 'Development'
   # Anypoint Organization environment id
   config :environment_id, :validate => :string
   # Interval (in seconds) between two log fetches.
@@ -54,16 +54,17 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
       # get all applications under this org and environment
       applications = api.apps(@organization_id, @environment_id, token)
 
-      # iterates between apps, fetching logs
+      # iterates between apps
       applications.each do |application|
         application_name = application['domain']
-        deployment_id = api.current_deployment_id(application_name, @organization_id, @environment_id, token)
+        # fetches the current deployment to only fetch currently application logs
+        current_deployment = api.current_deployment_id(application_name, @organization_id, @environment_id, token)
         begin
           @logger.info("Fetching logs for " + application_name)
           first_start_time = @sincedb.read(application_name)
           start_time = first_start_time
           while !stop?
-            logs = api.logs(start_time, @environment_id, application_name, deployment_id, token)
+            logs = api.logs(start_time, @environment_id, application_name, current_deployment["deploymentId"], token)
             break if logs.empty?
             start_time = logs[-1]['event']['timestamp'] + 1
             push_logs(logs, @environment_name, application_name, queue)

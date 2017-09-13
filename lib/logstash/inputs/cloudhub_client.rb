@@ -49,8 +49,8 @@ class CloudhubClient
     return JSON.parse(response.body)
   end
 
-  ## Returns the current (last) deployment id from CloudHub platform for a given application
-  def current_deployment_id application_name, organization_id, environment_id, cached_token=token
+  ## Returns the current deployment object from CloudHub platform for a given application
+  def current_deployment application_name, organization_id, environment_id, cached_token=token
     # query parameters to fetch only the newest deployment
     params = {:orderByDate => "DESC", :limit => "1"}
     uri = URI.parse("https://anypoint.mulesoft.com/cloudhub/api/v2/applications/#{application_name}/deployments")
@@ -66,11 +66,11 @@ class CloudhubClient
 
     response = client.request(request)
     json = JSON.parse(response.body)
-    return json['data'][0]['deploymentId']
+    return json['data'][0]
   end
 
-  def logs startTime, environment_id, application, deployment_id, cached_token=token
-    uri = URI.parse("https://anypoint.mulesoft.com/cloudhub/api/v2/applications/#{application}/logs")
+  def logs startTime, environment_id, application_name, deployment_id, cached_token=token
+    uri = URI.parse("https://anypoint.mulesoft.com/cloudhub/api/v2/applications/#{application_name}/logs")
 
     client = Net::HTTP.new(uri.host, uri.port)
     client.use_ssl = true
