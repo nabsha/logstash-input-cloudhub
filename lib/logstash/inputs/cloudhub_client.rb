@@ -49,10 +49,30 @@ class CloudhubClient
     return JSON.parse(response.body)
   end
 
-  def logs startTime, environment_id, application, cached_token=token
+  ## Returns the current (last) deployment id from CloudHub platform for a given application
+  def current_deployment_id application_name, organization_id, environment_id, cached_token=token
+    # query parameters to fetch only the newest deployment
+    params = {:orderByDate => "DESC", :limit => "1"}
+    uri = URI.parse("https://anypoint.mulesoft.com/cloudhub/api/v2/applications/#{application_name}/deployments")
+    uri.query = URI.encode_www_form(params)
+
+    client = Net::HTTP.new(uri.host, uri.port)
+    client.use_ssl = true
+
+    request = Net::HTTP::Get.new(uri.request_uri)
+    request.add_field("Authorization", "Bearer #{cached_token}")
+    request.add_field("X-ANYPNT-ENV-ID", environment_id)
+    request.add_field("X-ANYPNT-ORG-ID", organization_id)
+
+    response = client.request(request)
+    json = JSON.parse(response.body)
+    return json['data'][0]['deploymentId']
+  end
+
+  def logs startTime, environment_id, application, deployment_id, cached_token=token
     uri = URI.parse("https://anypoint.mulesoft.com/cloudhub/api/v2/applications/#{application}/logs")
 
-    client = Net::HTTP.new(uri.host, uri.port, @proxy_host, @proxy_port, @proxy_username, @proxy_password)
+    client = Net::HTTP.new(uri.host, uri.port)
     client.use_ssl = true
 
     request = Net::HTTP::Post.new(uri.request_uri)
@@ -62,7 +82,8 @@ class CloudhubClient
       :startTime => startTime,
       :endTime => java.lang.Long::MAX_VALUE,
       :limit => @events_per_call,
-      :descending => false
+      :descending => false,
+      :deploymentId => deployment_id
     })
     request.add_field("X-ANYPNT-ENV-ID", environment_id)
     retries = 10

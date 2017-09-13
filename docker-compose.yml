@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: sciensa/logstash-cloudhub:1.2.0
     command: >
       logstash --debug -e '
         input {
