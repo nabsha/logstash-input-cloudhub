@@ -21,10 +21,8 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
   config :password, :validate => :string
   # Anypoint organization id
   config :organization_id, :validate => :string
-  # Environment name for the logstash events, default is 'Development'
-  config :environment_name, :validate => :string, default => 'Development'
-  # Anypoint Organization environment id
-  config :environment_id, :validate => :string
+  # CloudHub organization environment name, default is 'Development'
+  config :environment_name, :validate => :string, :default => 'Development'
   # Interval (in seconds) between two log fetches.
   # (End of previous fetch to start of next fetch)
   # Default value: 300
@@ -32,8 +30,8 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
   # How many events should be fetched in one REST call?
   # Default: 100
   config :events_per_call, :validate => :number, :default => 100
-  # Folder for sincedb files, default is <logstash>/data/plugins/cloudhub
-  config :sincedb_folder, :validate => :string, :default => nil
+  # Folder for sincedb files, default is /usr/share/logstash/data/plugins/cloudhub
+  config :sincedb_folder, :validate => :string, :default => "/usr/share/logstash/data/plugins/cloudhub"
   # File name prefix for sincedb files, default is 'sincedb-'
   config :sincedb_prefix, :validate => :string, :default => 'sincedb-'
 
@@ -46,34 +44,45 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
   end
 
   def run(queue)
-    api = CloudhubClient.new @logger, @username, @password, @organization_id, @environment_id, @events_per_call
+    api = CloudhubClient.new @logger, @username, @password, @organization_id, @events_per_call
 
     while !stop?
       # get the token once per main loop (more efficient than fetching it for each API call)
       token = api.token()
-      # get all applications under this org and environment
-      applications = api.apps(@organization_id, @environment_id, token)
+      # fetch all organization data
+      organization = api.organization(@organization_id, token)
 
-      # iterates between apps
+      #get all organization environments, and iterate to find the desired one
+      environment = nil
+      environments = organization['environments']
+      environments.each do |env|
+        next if env['name'] != @environment_name
+        environment = env
+      end
+
+      # get all applications under this org and environment
+      applications = api.apps(@organization_id, environment['id'], token)
+
+      # fetch logs from all apps
       applications.each do |application|
-        application_name = application['domain']
         # fetches the current deployment to only fetch currently application logs
-        current_deployment = api.current_deployment_id(application_name, @organization_id, @environment_id, token)
+        application_domain = application['domain']
+        current_deployment = api.current_deployment(application_domain, @organization_id, environment['id'], token)
         begin
-          @logger.info("Fetching logs for " + application_name)
-          first_start_time = @sincedb.read(application_name)
+          @logger.info("Fetching logs for " + application_domain)
+          first_start_time = @sincedb.read(application_domain)
           start_time = first_start_time
           while !stop?
-            logs = api.logs(start_time, @environment_id, application_name, current_deployment["deploymentId"], token)
+            logs = api.logs(start_time, environment['id'], application_domain, current_deployment["deploymentId"], token)
             break if logs.empty?
             start_time = logs[-1]['event']['timestamp'] + 1
-            push_logs(logs, @environment_name, application_name, queue)
+            push_logs(logs, @environment_name, application_domain, queue)
           end
         rescue => exception
           puts exception.backtrace
         end
         if (start_time > first_start_time)
-          @sincedb.write(application_name, start_time)
+          @sincedb.write(application_domain, start_time)
         end
         break if stop?
       end

@@ -1,15 +1,13 @@
 # encoding: utf-8
-
 require "net/http"
 require "json"
 
 class CloudhubClient
-  def initialize logger, username, password, organization_id, environment_id, events_per_call
+  def initialize logger, username, password, organization_id, events_per_call
     @logger = logger
     @username = username
     @password = password
     @organization_id = organization_id
-    @environment_id = environment_id
     @events_per_call = events_per_call
   end
 
@@ -30,6 +28,20 @@ class CloudhubClient
     access_token = JSON.parse(response.body)['access_token']
     @logger.info('Access token: ' + access_token)
     return access_token
+  end
+
+  # Returns all Cloudhub organization and environment data
+  def organization organization_id, cached_token=token
+    uri = URI.parse("https://anypoint.mulesoft.com/accounts/api/organizations/#{organization_id}")
+    client = Net::HTTP.new(uri.host, uri.port)
+    client.use_ssl = true
+
+    request = Net::HTTP::Get.new(uri.request_uri)
+    request.add_field("Authorization", "Bearer #{cached_token}")
+
+    response = client.request(request)
+
+    return JSON.parse(response.body)
   end
 
   # Returns all applications for a given organization and environment. Useful properties:
