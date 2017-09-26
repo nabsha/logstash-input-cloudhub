@@ -10,9 +10,13 @@ services:
       logstash --debug -e '
         input {
           cloudhub {
-            username => "leogaona_gerdau"
-            password => "L30n@rd0"
-            organization_id => "6ea8d099-1d3c-4645-b89c-a199d002eefc"
-            environment_name => "Development"
+            username => "${CLOUDHUB_USERNAME}"
+            password => ${CLOUDHUB_PASSWORD}"
+            organization_id => "${CLOUDHUB_ORGANIZATION_ID}"
+            environment_name => "${CLOUDHUB_ENV_NAME}"
           }
-        } output { stdout {} }'
+        }
+        output {
+          stdout {}
+        }
+      '

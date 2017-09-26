@@ -51,6 +51,7 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
       token = api.token()
       # fetch all organization data
       organization = api.organization(@organization_id, token)
+      organization_name = organization['name']
 
       #get all organization environments, and iterate to find the desired one
       environment = nil
@@ -73,10 +74,10 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
           first_start_time = @sincedb.read(application_domain)
           start_time = first_start_time
           while !stop?
-            logs = api.logs(start_time, environment['id'], application_domain, current_deployment["deploymentId"], token)
+            logs = api.logs(start_time, environment['id'], application_domain, current_deployment['deploymentId'], token)
             break if logs.empty?
             start_time = logs[-1]['event']['timestamp'] + 1
-            push_logs(logs, @environment_name, application_domain, queue)
+            push_logs(logs, @environment_name, application_domain, organization_name, queue)
           end
         rescue => exception
           puts exception.backtrace
@@ -90,18 +91,14 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
     end
   end
 
-  def push_logs logs, environment, domain, queue
+  def push_logs logs, environment, domain, organization, queue
     for log in logs do
       event = log['event']
       log_event = LogStash::Event.new(
         'host' => @host,
         'environment' => environment,
         'application' => domain,
-
-        'deploymentId' => log['deploymentId'],
-        'instanceId' => log['instanceId'],
-        'recordId' => log['recordId'],
-
+        'organization' => organization,
         'line' => log['line'],
         'loggerName' => event['loggerName'],
         'threadName' => event['threadName'],
