@@ -8,6 +8,7 @@ require "logstash/namespace"
 require "stud/interval"
 require "fileutils"
 require "socket"
+require "date"
 
 # This input plugin reads log messages from the Anypoint REST API.
 # You don't need to configure your environments/applications, the
@@ -94,6 +95,7 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
   def push_logs logs, environment, domain, organization, queue
     for log in logs do
       event = log['event']
+      timestamp = DateTime.strptime((event['timestamp']/1000).to_s, "%s")
       log_event = LogStash::Event.new(
         'environment' => environment,
         'application' => domain,
@@ -102,7 +104,7 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
         'loggerName' => event['loggerName'],
         'threadName' => event['threadName'],
         'priority' => event['priority'],
-        'log_timestamp' => event['timestamp'],
+        'log_timestamp' => timestamp.strftime('%FT%T'),
         'message' => event['message']
       )
       decorate(log_event)

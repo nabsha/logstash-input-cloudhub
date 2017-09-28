@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name          = 'logstash-input-cloudhub'
-  s.version       = '1.3.3'
+  s.version       = '1.4.0'
   s.licenses      = ['Apache License (2.0)']
   s.summary       = 'logstash input plugin for mulesoft cloudhub platform'
   s.description   = 'this plugin has been designed to fetch cloudhub logs using Mulesoft CloudHub Enhanced Log APIs'
