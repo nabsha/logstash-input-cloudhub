@@ -30,8 +30,8 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
   # How many events should be fetched in one REST call?
   # Default: 100
   config :events_per_call, :validate => :number, :default => 100
-  # Folder for sincedb files, default is /usr/share/logstash/data/plugins/cloudhub
-  config :sincedb_folder, :validate => :string, :default => "/usr/share/logstash/data/plugins/cloudhub"
+  # Folder for sincedb files, default is /usr/share/logstash/data
+  config :sincedb_folder, :validate => :string, :default => "/usr/share/logstash/data"
   # File name prefix for sincedb files, default is 'sincedb-'
   config :sincedb_prefix, :validate => :string, :default => 'sincedb-'
 
@@ -95,7 +95,6 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
     for log in logs do
       event = log['event']
       log_event = LogStash::Event.new(
-        'host' => @host,
         'environment' => environment,
         'application' => domain,
         'organization' => organization,
@@ -103,7 +102,7 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
         'loggerName' => event['loggerName'],
         'threadName' => event['threadName'],
         'priority' => event['priority'],
-        'timestamp' => DateTime.strptime(event['timestamp'].to_s,'%s'),
+        'log_timestamp' => event['timestamp']
         'message' => event['message']
       )
       decorate(log_event)
