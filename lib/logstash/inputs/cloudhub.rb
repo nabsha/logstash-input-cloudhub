@@ -102,7 +102,7 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
         'loggerName' => event['loggerName'],
         'threadName' => event['threadName'],
         'priority' => event['priority'],
-        'log_timestamp' => event['timestamp']
+        'log_timestamp' => event['timestamp'],
         'message' => event['message']
       )
       decorate(log_event)
