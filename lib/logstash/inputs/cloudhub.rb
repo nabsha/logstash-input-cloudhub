@@ -100,13 +100,16 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
         'environment' => environment,
         'application' => domain,
         'organization' => organization,
-        'line' => log['line'],
+        'log_line' => log['line'],
         'loggerName' => event['loggerName'],
         'threadName' => event['threadName'],
         'priority' => event['priority'],
         'log_timestamp' => timestamp.strftime('%FT%T'),
         'message' => event['message']
       )
+      # exposes the application and log_timestamp values to logstash, so we can create a custom document_id at elasticsearch
+      log_event.sprintf(@application)
+      log_event.sprintf(@log_timestamp)
       decorate(log_event)
       queue << log_event
     end
