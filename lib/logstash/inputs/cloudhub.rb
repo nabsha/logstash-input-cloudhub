@@ -28,9 +28,6 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
   # (End of previous fetch to start of next fetch)
   # Default value: 300
   config :interval, :validate => :number, :default => 300
-  # How many events should be fetched in one REST call?
-  # Default: 100
-  config :events_per_call, :validate => :number, :default => 100
   # Folder for sincedb files, default is /usr/share/logstash/data
   config :sincedb_folder, :validate => :string, :default => "/usr/share/logstash/data"
   # File name prefix for sincedb files, default is 'sincedb-'
@@ -45,7 +42,7 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
   end
 
   def run(queue)
-    api = CloudhubClient.new @logger, @username, @password, @organization_id, @events_per_call
+    api = CloudhubClient.new(@logger, @username, @password)
 
     while !stop?
       # get the token once per main loop (more efficient than fetching it for each API call)
@@ -107,9 +104,6 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
         'log_timestamp' => timestamp.strftime('%FT%T'),
         'message' => event['message']
       )
-      # exposes the application and log_timestamp values to logstash, so we can create a custom document_id at elasticsearch
-      log_event.sprintf(@application)
-      log_event.sprintf(@log_timestamp)
       decorate(log_event)
       queue << log_event
     end
