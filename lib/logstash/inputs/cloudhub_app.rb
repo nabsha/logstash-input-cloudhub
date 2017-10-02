@@ -56,7 +56,7 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
           # fetch the applications for the current environment and generate the logstash event
           applications = api.apps(organization_id, environment_id)
           break if applications.empty?
-          push_data(applications, environment_name, organization_name, queue)
+          push_data(applications, environment, organization, queue)
         end
 
         break if stop?
@@ -69,12 +69,15 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
   def push_data applications, environment, organization, queue
     for application in applications do
       data_event = LogStash::Event.new(
-        'organization' => organization,
-        'environment' => environment,
+        'organization' => organization['name'],
+        'production_vcores' => organization['entitlements']['vCoresProduction']['assigned'],
+        'sandbox_vcores' => organization['entitlements']['vCoresSandbox']['assigned'],
+        'environment' => environment['name'],
         'application' => application['domain'],
+        'application_vcores' => application['workers']['amount'] * application['workers']['type']['weight'],
         'status' => application['status'],
         'workers' => application['workers'],
-        'muleVersion' => application['muleVersion']['version']
+        'mule_runtime' => application['muleVersion']['version']
       )
       decorate(data_event)
       queue << data_event
