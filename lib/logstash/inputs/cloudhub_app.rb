@@ -55,7 +55,7 @@ class LogStash::Inputs::Cloudhub < LogStash::Inputs::Base
           @logger.info("fetching app data for organization #{organization_name} and environment #{environment_name}")
           # fetch the applications for the current environment and generate the logstash event
           applications = api.apps(organization_id, environment_id)
-          break if applications.empty?
+          next if applications.empty?
           push_data(applications, environment, organization, queue)
         end
 
