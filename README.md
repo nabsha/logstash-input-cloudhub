@@ -1,3 +1,5 @@
+Forked from https://bitbucket.org/sciensa/logstash-input-cloudhub
+
 # Logstash CloudHub input plugin
 This is a customized docker image based on the official logstash one. It contains some input plugins to fetch data from CloudHub:
  - cloudhub: Fetches logs for a given organization applications on one specific environment
